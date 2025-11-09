@@ -3,29 +3,29 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-# Temporary variable to store the latest ESP32 data
-latest_data = {}
+# Store latest sensor data
+latest_data = {"pir": None, "ir": None, "ultrasonic": None}
 
 @app.get("/")
 def home():
     return {"message": "ESP32 FastAPI Server is running successfully 🚀"}
 
-# Receive sensor data from ESP32
+# --- ESP32 posts data here ---
 @app.post("/data")
 async def receive_data(request: Request):
     global latest_data
     try:
         data = await request.json()
-        print("📩 Received data:", data)
-        latest_data = data  # Save latest data
-        return {"status": "success", "received": data}
+        latest_data.update(data)  # Save data
+        print("Received from ESP32:", latest_data)
+        return {"status": "success", "received": latest_data}
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=400)
 
-# Endpoint for Streamlit to GET the latest data
+# --- Streamlit (or user) can fetch it here ---
 @app.get("/data")
-def get_data():
-    if latest_data:
-        return {"latest_data": latest_data}
+def get_latest_data():
+    if any(v is not None for v in latest_data.values()):
+        return {"data": latest_data}
     else:
-        return {"message": "No data received yet 😴"}
+        return {"message": "No data received yet from ESP32."}
