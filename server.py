@@ -3,22 +3,27 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-# Root endpoint
+# Store latest sensor data
+latest_data = {}
+
 @app.get("/")
 def home():
     return {"message": "ESP32 FastAPI Server is running successfully 🚀"}
 
-# POST endpoint to receive sensor data from ESP32
 @app.post("/data")
 async def receive_data(request: Request):
+    global latest_data
     try:
         data = await request.json()
-        print("Received data:", data)
+        latest_data = data  # Save it for future GET requests
+        print("✅ Received new data:", data)
         return {"status": "success", "received": data}
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=400)
 
-# Optional: GET endpoint for testing from Streamlit or browser
 @app.get("/data")
-def get_info():
-    return {"message": "Use POST /data to send sensor JSON from ESP32"}
+def get_latest_data():
+    if latest_data:
+        return {"status": "success", "latest_data": latest_data}
+    else:
+        return {"status": "empty", "message": "No data received yet"}
