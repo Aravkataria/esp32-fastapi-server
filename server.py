@@ -3,8 +3,7 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-# Store latest sensor data
-latest_data = {}
+latest_data = {}  # Global variable to store last sensor data
 
 @app.get("/")
 def home():
@@ -15,15 +14,17 @@ async def receive_data(request: Request):
     global latest_data
     try:
         data = await request.json()
-        latest_data = data  # Save it for future GET requests
-        print("✅ Received new data:", data)
+        latest_data = data  # Store last received data
+        print("Received data from ESP32:", data)
         return {"status": "success", "received": data}
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=400)
 
-@app.get("/data")
+@app.get("/latest")
 def get_latest_data():
-    if latest_data:
-        return {"status": "success", "latest_data": latest_data}
-    else:
-        return {"status": "empty", "message": "No data received yet"}
+    """
+    Returns the most recent sensor data received from ESP32
+    """
+    if not latest_data:
+        return {"status": "waiting", "message": "No data received yet"}
+    return {"status": "ok", "data": latest_data}
