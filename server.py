@@ -1,30 +1,24 @@
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-# Allow Streamlit to fetch data
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Root endpoint
+@app.get("/")
+def home():
+    return {"message": "ESP32 FastAPI Server is running successfully 🚀"}
 
-latest_data = {}
+# POST endpoint to receive sensor data from ESP32
+@app.post("/data")
+async def receive_data(request: Request):
+    try:
+        data = await request.json()
+        print("Received data:", data)
+        return {"status": "success", "received": data}
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=400)
 
-@app.post("/update")
-async def update_data(request: Request):
-    """Receive JSON data from ESP32"""
-    global latest_data
-    data = await request.json()
-    latest_data = data
-    print("Received data:", data)
-    return {"status": "ok", "received": data}
-
-@app.get("/latest")
-async def get_latest():
-    """Streamlit fetches this"""
-    if not latest_data:
-        return {"status": "no_data"}
-    return latest_data
+# Optional: GET endpoint for testing from Streamlit or browser
+@app.get("/data")
+def get_info():
+    return {"message": "Use POST /data to send sensor JSON from ESP32"}
