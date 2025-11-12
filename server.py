@@ -8,7 +8,7 @@ latest_data = {"pir": None, "ir": None, "ultrasonic": None}
 
 @app.get("/")
 def home():
-    return {"message": "ESP32 FastAPI Server is running successfully 🚀"}
+    return {"message": "ESP32 FastAPI Server is running successfully"}
 
 # --- ESP32 posts data here ---
 @app.post("/data")
